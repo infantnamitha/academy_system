@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}FIIT{% endblock %}</title>
+  {% load static %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<!-- Sidebar Navigation -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">F</div>
+    <div>
+      <div class="logo-title">FIIT</div>
+      <div class="logo-sub">Academy </div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="{% url 'dashboard' %}"        class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+      <span class="nav-icon">⬡</span> Dashboard
+    </a>
+    <a href="{% url 'student_list' %}"     class="nav-item {% if 'student' in request.resolver_match.url_name %}active{% endif %}">
+      <span class="nav-icon">◈</span> Students
+    </a>
+    <a href="{% url 'mark_attendance' %}"  class="nav-item {% if request.resolver_match.url_name == 'mark_attendance' %}active{% endif %}">
+      <span class="nav-icon">◉</span> Mark Attendance
+    </a>
+    <a href="{% url 'attendance_today' %}" class="nav-item {% if 'attendance_view' in request.resolver_match.url_name or request.resolver_match.url_name == 'attendance_today' %}active{% endif %}">
+      <span class="nav-icon">◎</span> View Attendance
+    </a>
+    <a href="{% url 'attendance_history' %}" class="nav-item {% if request.resolver_match.url_name == 'attendance_history' %}active{% endif %}">
+      <span class="nav-icon">▦</span> History
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar">{{ request.user.username|first|upper }}</div>
+      <div>
+        <div class="user-name">{{ request.user.username }}</div>
+        <div class="user-role">Administrator</div>
+      </div>
+    </div>
+    <a href="{% url 'logout' %}" class="logout-btn" title="Logout">⏻</a>
+  </div>
+</aside>
+
+<!-- Mobile header -->
+<header class="mobile-header">
+  <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+  <span class="mobile-title">FIIT</span>
+  <a href="{% url 'logout' %}" class="mobile-logout">⏻</a>
+</header>
+
+<!-- Main content -->
+<main class="main-content">
+  <!-- Flash messages -->
+  {% if messages %}
+    <div class="messages-container">
+      {% for message in messages %}
+        <div class="message message-{{ message.tags }}">
+          {{ message }}
+          <button onclick="this.parentElement.remove()">×</button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% block content %}{% endblock %}
+</main>
+
+<!-- Sidebar overlay for mobile -->
+<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

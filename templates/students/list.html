@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block title %}Students — EduTrack{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Students</h1>
+    <p class="page-sub">{{ students.count }} student{{ students.count|pluralize }} enrolled</p>
+  </div>
+  <div class="header-actions">
+    <a href="{% url 'export_csv' %}" class="btn btn-ghost">↓ Export CSV</a>
+    <a href="{% url 'student_add' %}" class="btn btn-primary">+ Add Student</a>
+  </div>
+</div>
+
+<!-- Search & Filter -->
+<div class="card filter-card">
+  <form method="get" class="filter-form">
+    <div class="search-input-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" name="q" value="{{ query }}" placeholder="Search by name or phone…" class="form-input search-input"/>
+    </div>
+    <select name="course" class="form-input select-filter">
+      <option value="">All Courses</option>
+      {% for val, label in courses %}
+        <option value="{{ val }}" {% if selected_course == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-primary">Search</button>
+    {% if query or selected_course %}
+      <a href="{% url 'student_list' %}" class="btn btn-ghost">Clear</a>
+    {% endif %}
+  </form>
+</div>
+
+<!-- Students Table -->
+<div class="card">
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Course</th>
+          <th>Total Fees</th>
+          <th>Paid</th>
+          <th>Due</th>
+          <th>Attendance</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in students %}
+        <tr>
+          <td class="mono text-muted">{{ forloop.counter }}</td>
+          <td>
+            <a href="{% url 'student_detail' s.pk %}" class="student-name-link">{{ s.name }}</a>
+            <div class="student-meta">Joined {{ s.enrolled_on|date:"M j, Y" }}</div>
+          </td>
+          <td class="mono">{{ s.phone }}</td>
+          <td><span class="badge badge-course">{{ s.course }}</span></td>
+          <td class="mono">₹{{ s.fees }}</td>
+          <td class="mono text-green">₹{{ s.fees_paid }}</td>
+          <td class="mono {% if s.fees_due > 0 %}text-red{% else %}text-green{% endif %}">₹{{ s.fees_due }}</td>
+          <td>
+            <div class="att-bar-wrap">
+              <div class="att-bar">
+                <div class="att-bar-fill {% if s.attendance_percentage >= 75 %}att-fill-good{% elif s.attendance_percentage >= 50 %}att-fill-ok{% else %}att-fill-poor{% endif %}"
+                     style="width:{{ s.attendance_percentage }}%"></div>
+              </div>
+              <span class="att-pct-small">{{ s.attendance_percentage }}%</span>
+            </div>
+          </td>
+          <td>
+            <div class="action-btns">
+              <a href="{% url 'student_detail' s.pk %}" class="btn btn-sm btn-ghost" title="View">👁</a>
+              <a href="{% url 'student_edit' s.pk %}"   class="btn btn-sm btn-ghost" title="Edit">✎</a>
+              <a href="{% url 'student_delete' s.pk %}" class="btn btn-sm btn-danger-ghost" title="Delete">🗑</a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="9" class="empty-row">
+            {% if query %}No students found for "{{ query }}".{% else %}No students yet.{% endif %}
+            <a href="{% url 'student_add' %}">Add the first one →</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

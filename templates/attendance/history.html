@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}Attendance History — EduTrack{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Attendance History</h1>
+    <p class="page-sub">All recorded dates</p>
+  </div>
+  <a href="{% url 'mark_attendance' %}" class="btn btn-primary">+ Mark Today</a>
+</div>
+
+<div class="card">
+  {% if dates %}
+  <div class="history-grid">
+    {% for date in dates %}
+    <a href="{% url 'attendance_view' date|date:'Y-m-d' %}" class="history-date-card">
+      <div class="history-month">{{ date|date:"M" }}</div>
+      <div class="history-day">{{ date|date:"d" }}</div>
+      <div class="history-year">{{ date|date:"Y" }}</div>
+      <div class="history-weekday">{{ date|date:"D" }}</div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-page">
+    <div class="empty-icon">▦</div>
+    <h3>No attendance records yet</h3>
+    <p>Start marking attendance to build up a history.</p>
+    <a href="{% url 'mark_attendance' %}" class="btn btn-primary">Mark Today's Attendance</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

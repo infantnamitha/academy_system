@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Delete Student — EduTrack{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Delete Student</h1>
+</div>
+
+<div class="confirm-card">
+  <div class="confirm-icon">🗑</div>
+  <h2 class="confirm-title">Remove "{{ student.name }}"?</h2>
+  <p class="confirm-text">
+    This will deactivate <strong>{{ student.name }}</strong>'s account. Their attendance records will be preserved. You can re-enroll them later via the admin panel.
+  </p>
+  <div class="confirm-details">
+    <span><strong>Course:</strong> {{ student.course }}</span>
+    <span><strong>Phone:</strong> {{ student.phone }}</span>
+  </div>
+  <form method="post" class="confirm-actions">
+    {% csrf_token %}
+    <a href="{% url 'student_list' %}" class="btn btn-ghost">Cancel</a>
+    <button type="submit" class="btn btn-danger">Yes, Remove Student</button>
+  </form>
+</div>
+{% endblock %}

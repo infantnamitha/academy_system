@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}Mark Attendance — EduTrack{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Mark Attendance</h1>
+    <p class="page-sub">{{ selected_date|date:"l, F j, Y" }}</p>
+  </div>
+  <!-- Date picker -->
+  <form method="get" class="date-picker-form">
+    <input type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}"
+           class="form-input date-input" onchange="this.form.submit()"/>
+  </form>
+</div>
+
+{% if already_marked %}
+<div class="info-banner">
+  ✅ Attendance already marked for this date — {{ present_count }} present, {{ absent_count }} absent. You can update below.
+</div>
+{% endif %}
+
+{% if student_data %}
+<!-- Quick select toolbar -->
+<div class="bulk-toolbar">
+  <button type="button" class="btn btn-sm btn-ghost" onclick="markAll('Present')">✓ Mark All Present</button>
+  <button type="button" class="btn btn-sm btn-ghost" onclick="markAll('Absent')">✗ Mark All Absent</button>
+  <span class="bulk-count" id="presentCount">0 present</span>
+</div>
+
+<form method="post" id="attendanceForm">
+  {% csrf_token %}
+  <div class="attendance-grid">
+    {% for item in student_data %}
+    <div class="att-card" id="card_{{ item.student.pk }}">
+      <div class="att-card-header">
+        <div class="att-student-avatar">{{ item.student.name|first|upper }}</div>
+        <div>
+          <div class="att-student-name">{{ item.student.name }}</div>
+          <div class="att-student-course">{{ item.student.course }}</div>
+        </div>
+      </div>
+      <div class="att-toggle">
+        <label class="toggle-btn present-btn {% if item.status == 'Present' %}selected{% endif %}"
+               onclick="selectStatus({{ item.student.pk }}, 'Present')">
+          <input type="radio" name="status_{{ item.student.pk }}" value="Present"
+                 {% if item.status == 'Present' %}checked{% endif %} hidden/>
+          ✓ Present
+        </label>
+        <label class="toggle-btn absent-btn {% if item.status == 'Absent' %}selected{% endif %}"
+               onclick="selectStatus({{ item.student.pk }}, 'Absent')">
+          <input type="radio" name="status_{{ item.student.pk }}" value="Absent"
+                 {% if item.status == 'Absent' %}checked{% endif %} hidden/>
+          ✗ Absent
+        </label>
+      </div>
+      <input type="text" name="note_{{ item.student.pk }}" value="{{ item.note }}"
+             placeholder="Note (optional)" class="form-input att-note-input"/>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="form-actions sticky-actions">
+    <div class="save-summary" id="saveSummary">Ready to save</div>
+    <button type="submit" class="btn btn-primary btn-lg">💾 Save Attendance</button>
+  </div>
+</form>
+{% else %}
+<div class="empty-page">
+  <div class="empty-icon">◈</div>
+  <h3>No students enrolled</h3>
+  <p>Add students first before marking attendance.</p>
+  <a href="{% url 'student_add' %}" class="btn btn-primary">+ Add Student</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function selectStatus(pk, status) {
+    const card = document.getElementById('card_' + pk);
+    // Update card style
+    card.querySelector('.present-btn').classList.toggle('selected', status === 'Present');
+    card.querySelector('.absent-btn').classList.toggle('selected', status === 'Absent');
+    // Check radio
+    card.querySelector(`input[value="${status}"]`).checked = true;
+    updateSummary();
+  }
+
+  function markAll(status) {
+    document.querySelectorAll('.att-card').forEach(card => {
+      const pk = card.id.replace('card_', '');
+      selectStatus(pk, status);
+    });
+  }
+
+  function updateSummary() {
+    const present = document.querySelectorAll('input[type=radio][value=Present]:checked').length;
+    const absent  = document.querySelectorAll('input[type=radio][value=Absent]:checked').length;
+    document.getElementById('presentCount').textContent = present + ' present';
+    document.getElementById('saveSummary').textContent  = `${present} Present · ${absent} Absent`;
+  }
+
+  // Init summary on load
+  document.addEventListener('DOMContentLoaded', updateSummary);
+</script>
+{% endblock %}

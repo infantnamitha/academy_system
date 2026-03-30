@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} Student — EduTrack{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">{{ action }} Student</h1>
+    <p class="page-sub">{% if action == 'Add' %}Enroll a new student{% else %}Update student details{% endif %}</p>
+  </div>
+  <a href="{% url 'student_list' %}" class="btn btn-ghost">← Back to Students</a>
+</div>
+
+<div class="form-card">
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    <!-- Non-field errors -->
+    {% if form.non_field_errors %}
+      <div class="form-error-banner">
+        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="form-grid">
+      <!-- Name -->
+      <div class="form-group {% if form.name.errors %}has-error{% endif %}">
+        <label class="form-label">Full Name <span class="required">*</span></label>
+        {{ form.name }}
+        {% if form.name.errors %}
+          <span class="form-error">{{ form.name.errors.0 }}</span>
+        {% endif %}
+      </div>
+
+      <!-- Phone -->
+      <div class="form-group {% if form.phone.errors %}has-error{% endif %}">
+        <label class="form-label">Phone Number <span class="required">*</span></label>
+        {{ form.phone }}
+        {% if form.phone.errors %}
+          <span class="form-error">{{ form.phone.errors.0 }}</span>
+        {% endif %}
+      </div>
+
+      <!-- Email -->
+      <div class="form-group {% if form.email.errors %}has-error{% endif %}">
+        <label class="form-label">Email <span class="optional">(optional)</span></label>
+        {{ form.email }}
+        {% if form.email.errors %}
+          <span class="form-error">{{ form.email.errors.0 }}</span>
+        {% endif %}
+      </div>
+
+      <!-- Course -->
+      <div class="form-group {% if form.course.errors %}has-error{% endif %}">
+        <label class="form-label">Course <span class="required">*</span></label>
+        {{ form.course }}
+        {% if form.course.errors %}
+          <span class="form-error">{{ form.course.errors.0 }}</span>
+        {% endif %}
+      </div>
+
+      <!-- Fees -->
+      <div class="form-group {% if form.fees.errors %}has-error{% endif %}">
+        <label class="form-label">Total Fees (₹) <span class="required">*</span></label>
+        {{ form.fees }}
+        {% if form.fees.errors %}
+          <span class="form-error">{{ form.fees.errors.0 }}</span>
+        {% endif %}
+      </div>
+
+      <!-- Fees Paid -->
+      <div class="form-group {% if form.fees_paid.errors %}has-error{% endif %}">
+        <label class="form-label">Fees Paid (₹)</label>
+        {{ form.fees_paid }}
+        {% if form.fees_paid.errors %}
+          <span class="form-error">{{ form.fees_paid.errors.0 }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Live fees due preview -->
+    <div class="fees-preview" id="feesPreview">
+      <span class="fees-preview-label">Fees Due:</span>
+      <span class="fees-preview-value" id="feesDue">₹0</span>
+    </div>
+
+    <div class="form-actions">
+      <a href="{% url 'student_list' %}" class="btn btn-ghost">Cancel</a>
+      <button type="submit" class="btn btn-primary">
+        {% if action == 'Add' %}Enroll Student{% else %}Save Changes{% endif %}
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Live fees-due calculator
+  const feesInput     = document.querySelector('[name="fees"]');
+  const feesPaidInput = document.querySelector('[name="fees_paid"]');
+  const feesDueEl     = document.getElementById('feesDue');
+
+  function updateDue() {
+    const fees     = parseFloat(feesInput.value)     || 0;
+    const paid     = parseFloat(feesPaidInput.value) || 0;
+    const due      = fees - paid;
+    feesDueEl.textContent = '₹' + due.toLocaleString('en-IN');
+    feesDueEl.style.color = due > 0 ? 'var(--red)' : 'var(--green)';
+  }
+
+  feesInput.addEventListener('input', updateDue);
+  feesPaidInput.addEventListener('input', updateDue);
+  updateDue();
+</script>
+{% endblock %}

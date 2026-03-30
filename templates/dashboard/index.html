@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% block title %}FIIT{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-sub">{{ today|date:"l, F j, Y" }}</p>
+  </div>
+  <a href="{% url 'student_add' %}" class="btn btn-primary">+ Add Student</a>
+</div>
+
+<!-- Stat Cards -->
+<div class="stats-grid">
+  <div class="stat-card stat-blue">
+    <div class="stat-icon">◈</div>
+    <div class="stat-value">{{ total_students }}</div>
+    <div class="stat-label">Total Students</div>
+  </div>
+  <div class="stat-card stat-green">
+    <div class="stat-icon">◉</div>
+    <div class="stat-value">{{ today_present }}</div>
+    <div class="stat-label">Present Today</div>
+  </div>
+  <div class="stat-card stat-red">
+    <div class="stat-icon">◎</div>
+    <div class="stat-value">{{ today_absent }}</div>
+    <div class="stat-label">Absent Today</div>
+  </div>
+  <div class="stat-card stat-amber">
+    <div class="stat-icon">▦</div>
+    <div class="stat-value">{{ today_not_marked }}</div>
+    <div class="stat-label">Not Yet Marked</div>
+  </div>
+</div>
+
+<!-- Middle row -->
+<div class="two-col-grid">
+
+  <!-- Attendance donut -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Today's Attendance</h3>
+      <a href="{% url 'mark_attendance' %}" class="card-action">Mark Now →</a>
+    </div>
+    <div class="donut-wrapper">
+      {% if today_marked > 0 %}
+        <svg class="donut" viewBox="0 0 120 120">
+          {% with pct=today_present|floatformat:0 %}
+          <circle class="donut-bg" cx="60" cy="60" r="45"/>
+          <!-- Present arc -->
+          <circle class="donut-present" cx="60" cy="60" r="45"
+            stroke-dasharray="{{ today_present|floatformat:0 }} {{ today_marked }}"
+            stroke-dashoffset="0"
+            pathLength="{{ today_marked }}"/>
+          {% endwith %}
+        </svg>
+        <div class="donut-center">
+          <div class="donut-pct">
+            {% if today_marked > 0 %}
+              {% widthratio today_present today_marked 100 %}%
+            {% else %}0%{% endif %}
+          </div>
+          <div class="donut-label">Present</div>
+        </div>
+      {% else %}
+        <div class="donut-empty">No attendance<br/>marked yet today</div>
+      {% endif %}
+    </div>
+    <div class="donut-legend">
+      <span class="legend-dot legend-green"></span> Present: {{ today_present }}
+      &nbsp;&nbsp;
+      <span class="legend-dot legend-red"></span> Absent: {{ today_absent }}
+    </div>
+  </div>
+
+  <!-- Course breakdown -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Students by Course</h3>
+      <a href="{% url 'student_list' %}" class="card-action">View All →</a>
+    </div>
+    <div class="course-bars">
+      {% for course, count in courses.items %}
+      <div class="course-bar-item">
+        <div class="course-bar-label">
+          <span>{{ course }}</span>
+          <span class="course-bar-count">{{ count }}</span>
+        </div>
+        <div class="course-bar-track">
+          <div class="course-bar-fill" style="width: {% widthratio count total_students 100 %}%"></div>
+        </div>
+      </div>
+      {% empty %}
+        <p class="empty-state-small">No students enrolled yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+<!-- Recent Students -->
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Recent Students</h3>
+    <a href="{% url 'student_list' %}" class="card-action">View All →</a>
+  </div>
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Course</th>
+          <th>Phone</th>
+          <th>Fees Due</th>
+          <th>Attendance</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in recent_students %}
+        <tr>
+          <td><strong>{{ s.name }}</strong></td>
+          <td><span class="badge badge-course">{{ s.course }}</span></td>
+          <td class="mono">{{ s.phone }}</td>
+          <td class="{% if s.fees_due > 0 %}text-red{% else %}text-green{% endif %}">
+            ₹{{ s.fees_due }}
+          </td>
+          <td>
+            <span class="att-pct {% if s.attendance_percentage >= 75 %}att-good{% elif s.attendance_percentage >= 50 %}att-ok{% else %}att-poor{% endif %}">
+              {{ s.attendance_percentage }}%
+            </span>
+          </td>
+          <td>
+            <a href="{% url 'student_detail' s.pk %}" class="btn btn-sm btn-ghost">View</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="empty-row">No students yet. <a href="{% url 'student_add' %}">Add one →</a></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="quick-actions">
+  <a href="{% url 'student_add' %}"    class="qa-card">
+    <div class="qa-icon">+</div>
+    <div class="qa-label">Add Student</div>
+  </a>
+  <a href="{% url 'mark_attendance' %}" class="qa-card">
+    <div class="qa-icon">✓</div>
+    <div class="qa-label">Mark Attendance</div>
+  </a>
+  <a href="{% url 'export_csv' %}"      class="qa-card">
+    <div class="qa-icon">↓</div>
+    <div class="qa-label">Export Students</div>
+  </a>
+  <a href="{% url 'attendance_history' %}" class="qa-card">
+    <div class="qa-icon">▦</div>
+    <div class="qa-label">View History</div>
+  </a>
+</div>
+{% endblock %}

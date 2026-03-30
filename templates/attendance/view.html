@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block title %}Attendance {{ view_date }} — EduTrack{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Attendance</h1>
+    <p class="page-sub">{{ view_date|date:"l, F j, Y" }}</p>
+  </div>
+  <div class="header-actions">
+    <a href="{% url 'export_attendance' %}?date={{ view_date|date:'Y-m-d' }}" class="btn btn-ghost">↓ Export CSV</a>
+    <a href="{% url 'mark_attendance' %}?date={{ view_date|date:'Y-m-d' }}" class="btn btn-primary">✎ Edit</a>
+  </div>
+</div>
+
+<!-- Date nav -->
+<div class="date-nav-bar">
+  <a href="{% url 'attendance_today' %}" class="btn btn-sm btn-ghost">Today</a>
+  <form method="get" action="." class="date-jump-form">
+    <input type="date" name="date_jump" value="{{ view_date|date:'Y-m-d' }}"
+           class="form-input date-input" id="dateJump"/>
+    <button type="submit" class="btn btn-sm btn-ghost" onclick="jumpDate()">Go</button>
+  </form>
+</div>
+
+<!-- Summary pills -->
+<div class="att-summary-pills">
+  <div class="pill pill-total">Total: {{ total }}</div>
+  <div class="pill pill-present">Present: {{ present_count }}</div>
+  <div class="pill pill-absent">Absent: {{ absent_count }}</div>
+  {% if total > 0 %}
+  <div class="pill pill-pct">
+    {% widthratio present_count total 100 %}% Present Rate
+  </div>
+  {% endif %}
+</div>
+
+{% if records %}
+<div class="two-col-grid">
+  <!-- Present -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">✓ Present <span class="count-badge">{{ present_count }}</span></h3>
+    </div>
+    {% for r in present %}
+    <div class="att-list-item">
+      <div class="att-student-avatar small">{{ r.student.name|first|upper }}</div>
+      <div>
+        <div class="att-student-name">{{ r.student.name }}</div>
+        <div class="att-student-course">{{ r.student.course }}</div>
+      </div>
+      {% if r.note %}<span class="att-note">{{ r.note }}</span>{% endif %}
+    </div>
+    {% empty %}<p class="empty-state-small">No students present.</p>{% endfor %}
+  </div>
+
+  <!-- Absent -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">✗ Absent <span class="count-badge">{{ absent_count }}</span></h3>
+    </div>
+    {% for r in absent %}
+    <div class="att-list-item att-item-absent">
+      <div class="att-student-avatar small absent-avatar">{{ r.student.name|first|upper }}</div>
+      <div>
+        <div class="att-student-name">{{ r.student.name }}</div>
+        <div class="att-student-course">{{ r.student.course }}</div>
+      </div>
+      {% if r.note %}<span class="att-note">{{ r.note }}</span>{% endif %}
+    </div>
+    {% empty %}<p class="empty-state-small">No students absent.</p>{% endfor %}
+  </div>
+</div>
+{% else %}
+<div class="empty-page">
+  <div class="empty-icon">◎</div>
+  <h3>No attendance recorded for this date</h3>
+  <a href="{% url 'mark_attendance' %}?date={{ view_date|date:'Y-m-d' }}" class="btn btn-primary">Mark Attendance</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.getElementById('dateJump').addEventListener('change', function() {
+    window.location.href = '/attendance/view/' + this.value + '/';
+  });
+</script>
+{% endblock %}

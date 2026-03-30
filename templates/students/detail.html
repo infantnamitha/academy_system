@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}{{ student.name }} — EduTrack{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">{{ student.name }}</h1>
+    <p class="page-sub">{{ student.course }} · Enrolled {{ student.enrolled_on|date:"F j, Y" }}</p>
+  </div>
+  <div class="header-actions">
+    <a href="{% url 'student_edit' student.pk %}" class="btn btn-ghost">✎ Edit</a>
+    <a href="{% url 'student_list' %}" class="btn btn-ghost">← Back</a>
+  </div>
+</div>
+
+<div class="two-col-grid">
+  <!-- Student Info Card -->
+  <div class="card">
+    <div class="card-header"><h3 class="card-title">Student Info</h3></div>
+    <div class="detail-list">
+      <div class="detail-row">
+        <span class="detail-label">Phone</span>
+        <span class="detail-value mono">{{ student.phone }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Email</span>
+        <span class="detail-value">{{ student.email|default:"—" }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Course</span>
+        <span class="detail-value"><span class="badge badge-course">{{ student.course }}</span></span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Total Fees</span>
+        <span class="detail-value mono">₹{{ student.fees }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Fees Paid</span>
+        <span class="detail-value mono text-green">₹{{ student.fees_paid }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Fees Due</span>
+        <span class="detail-value mono {% if student.fees_due > 0 %}text-red{% else %}text-green{% endif %}">
+          ₹{{ student.fees_due }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Attendance Summary -->
+  <div class="card">
+    <div class="card-header"><h3 class="card-title">Attendance Summary</h3></div>
+    <div class="att-summary-grid">
+      <div class="att-summary-item">
+        <div class="att-summary-val">{{ total }}</div>
+        <div class="att-summary-lbl">Total Days</div>
+      </div>
+      <div class="att-summary-item text-green">
+        <div class="att-summary-val">{{ present }}</div>
+        <div class="att-summary-lbl">Present</div>
+      </div>
+      <div class="att-summary-item text-red">
+        <div class="att-summary-val">{{ absent }}</div>
+        <div class="att-summary-lbl">Absent</div>
+      </div>
+      <div class="att-summary-item">
+        <div class="att-summary-val">{{ student.attendance_percentage }}%</div>
+        <div class="att-summary-lbl">Attendance %</div>
+      </div>
+    </div>
+    <!-- Big progress bar -->
+    <div style="margin-top:1.5rem;">
+      <div class="att-bar" style="height:12px; border-radius:6px;">
+        <div class="att-bar-fill {% if student.attendance_percentage >= 75 %}att-fill-good{% elif student.attendance_percentage >= 50 %}att-fill-ok{% else %}att-fill-poor{% endif %}"
+             style="width:{{ student.attendance_percentage }}%; height:12px; border-radius:6px;"></div>
+      </div>
+      <p style="font-size:.8rem; color:var(--text-muted); margin-top:.4rem;">
+        {% if student.attendance_percentage >= 75 %}
+          ✅ Good attendance
+        {% elif student.attendance_percentage >= 50 %}
+          ⚠️ Needs improvement
+        {% else %}
+          ❌ Poor attendance — action required
+        {% endif %}
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Attendance History -->
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Attendance History</h3>
+  </div>
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr><th>Date</th><th>Day</th><th>Status</th><th>Note</th></tr>
+      </thead>
+      <tbody>
+        {% for r in attendance_records %}
+        <tr>
+          <td class="mono">{{ r.date|date:"Y-m-d" }}</td>
+          <td class="text-muted">{{ r.date|date:"l" }}</td>
+          <td>
+            <span class="status-badge {% if r.status == 'Present' %}status-present{% else %}status-absent{% endif %}">
+              {{ r.status }}
+            </span>
+          </td>
+          <td class="text-muted">{{ r.note|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="empty-row">No attendance records yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
